@@ -32,6 +32,14 @@
 
 #include <optional>
 
+#include <faiss/gpu/GpuDistance.h>
+#include <faiss/gpu/GpuIndexFlat.h>
+#include <faiss/gpu/GpuIndexIVFFlat.h>
+#include <faiss/gpu/GpuResources.h>
+#include <raft/spatial/knn/ann_common.h>
+#include <raft/spatial/knn/detail/common_faiss.h>
+#include <raft/spatial/knn/faiss_mr.hpp>
+
 namespace raft::bench::spatial {
 
 struct params {
@@ -153,6 +161,76 @@ struct ivf_flat_knn {
     search_params.n_probes = 20;
     raft::spatial::knn::ivf_flat::search(
       handle, search_params, *index, search_items, ps.n_queries, ps.k, out_idxs, out_dists);
+  }
+};
+
+template <typename ValT, typename IdxT>
+struct ivf_flat_knn_extend {
+  using dist_t = float;
+
+  std::optional<const raft::spatial::knn::ivf_flat::index<ValT, IdxT>> index;
+  raft::spatial::knn::ivf_flat::index_params index_params;
+  raft::spatial::knn::ivf_flat::search_params search_params;
+  params ps;
+
+  ivf_flat_knn_extend(const raft::handle_t& handle, const params& ps, const ValT* data) : ps(ps)
+  {
+    index_params.n_lists                  = 4096;
+    index_params.metric                   = raft::distance::DistanceType::L2Expanded;
+    index_params.kmeans_trainset_fraction = 0.4;
+    index_params.add_data_on_build        = false;
+    index.emplace(raft::spatial::knn::ivf_flat::build(
+      handle, index_params, data, IdxT(ps.n_samples), uint32_t(ps.n_dims)));
+    index.emplace(raft::spatial::knn::ivf_flat::extend<ValT, IdxT>(
+      handle, index.value(), data, nullptr, IdxT(ps.n_samples)));
+  }
+
+  void search(const raft::handle_t& handle,
+              const ValT* search_items,
+              dist_t* out_dists,
+              IdxT* out_idxs)
+  {
+    search_params.n_probes = 20;
+    raft::spatial::knn::ivf_flat::search(
+      handle, search_params, *index, search_items, ps.n_queries, ps.k, out_idxs, out_dists);
+  }
+};
+
+template <typename ValT, typename IdxT>
+struct faiss_ivf_flat {
+  using dist_t = float;
+
+  raft::spatial::knn::knnIndex index;
+  // raft::spatial::knn::IVFFlatParam index_params;
+  params ps;
+
+  faiss_ivf_flat(const raft::handle_t& handle, const params& ps, const ValT* data) : ps(ps)
+  {
+    RAFT_CUDA_TRY(cudaGetDevice(&(index.device)));
+    index.gpu_res.reset(new raft::spatial::knn::RmmGpuResources());
+    index.gpu_res->noTempMemory();
+    index.gpu_res->setDefaultStream(index.device, handle.get_stream());
+
+    index.metric = raft::distance::DistanceType::L2Expanded;
+
+    float train_fraction = 0.4;
+    faiss::gpu::GpuIndexIVFFlatConfig config;
+    config.device                  = index.device;
+    faiss::MetricType faiss_metric = raft::spatial::knn::detail::build_faiss_metric(index.metric);
+    index.index.reset(
+      new faiss::gpu::GpuIndexIVFFlat(index.gpu_res.get(), ps.n_dims, 4096, faiss_metric, config));
+    index.index->train(ps.n_samples * train_fraction, data);
+    index.index->add(ps.n_samples, data);
+  }
+
+  void search(const raft::handle_t& handle,
+              const ValT* search_items,
+              dist_t* out_dists,
+              IdxT* out_idxs)
+  {
+    // search_params.n_probes = 20;
+    // raft::spatial::knn::ivf_flat::search(
+    //   handle, search_params, *index, search_items, ps.n_queries, ps.k, out_idxs, out_dists);
   }
 };
 
@@ -355,14 +433,24 @@ const std::vector<Scope> kAllScopes{Scope::BUILD_SEARCH, Scope::SEARCH, Scope::B
     RAFT_BENCH_REGISTER(KNN, #ValT "/" #IdxT "/" #ImplT, inputs, strats, scope); \
   }
 
-KNN_REGISTER(float, int64_t, brute_force_knn, kInputs, kAllStrategies, kScopeFull);
-KNN_REGISTER(float, int64_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
-KNN_REGISTER(int8_t, int64_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
-KNN_REGISTER(uint8_t, int64_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
+// KNN_REGISTER(float, int64_t, brute_force_knn, kInputs, kAllStrategies, kScopeFull);
+// KNN_REGISTER(float, int64_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
+// KNN_REGISTER(int8_t, int64_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
+// KNN_REGISTER(uint8_t, int64_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
 
-KNN_REGISTER(float, uint32_t, brute_force_knn, kInputs, kNoCopyOnly, kScopeFull);
-KNN_REGISTER(float, uint32_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
-KNN_REGISTER(int8_t, uint32_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
-KNN_REGISTER(uint8_t, uint32_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
+// KNN_REGISTER(float, uint32_t, brute_force_knn, kInputs, kNoCopyOnly, kScopeFull);
+// KNN_REGISTER(float, uint32_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
+// KNN_REGISTER(int8_t, uint32_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
+// KNN_REGISTER(uint8_t, uint32_t, ivf_flat_knn, kInputs, kNoCopyOnly, kAllScopes);
 
+const std::vector<params> kInputs_faiss{
+  {100000, 128, 1000, 32},
+  {2000000, 128, 1000, 32},
+  {10000000, 128, 1000, 32},
+  {20000000, 128, 1000, 32},
+  // {40000000, 128, 1000, 32},
+};
+const std::vector<Scope> kScopeBuild{Scope::BUILD};
+KNN_REGISTER(float, int64_t, ivf_flat_knn_extend, kInputs_faiss, kNoCopyOnly, kScopeBuild);
+KNN_REGISTER(float, int64_t, faiss_ivf_flat, kInputs_faiss, kNoCopyOnly, kScopeBuild);
 }  // namespace raft::bench::spatial
