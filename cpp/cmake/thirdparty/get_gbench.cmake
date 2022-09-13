@@ -39,5 +39,5 @@ function(find_and_configure_gbench)
 
 endfunction()
 
-find_and_configure_gbench(VERSION      1.5.3
-                          PINNED_TAG   c05843a9f622db08ad59804c190f98879b76beba)
+find_and_configure_gbench(VERSION      1.7.0
+                          PINNED_TAG   361e8d1cfe0c6c36d30b39f1b61302ece5507320)
