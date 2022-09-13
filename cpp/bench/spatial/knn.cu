@@ -175,12 +175,13 @@ struct ivf_flat_knn_extend {
 
   ivf_flat_knn_extend(const raft::handle_t& handle, const params& ps, const ValT* data) : ps(ps)
   {
+    float train_fraction = 0.4;
     index_params.n_lists                  = 4096;
     index_params.metric                   = raft::distance::DistanceType::L2Expanded;
-    index_params.kmeans_trainset_fraction = 0.4;
+    index_params.kmeans_trainset_fraction = 1;
     index_params.add_data_on_build        = false;
     index.emplace(raft::spatial::knn::ivf_flat::build(
-      handle, index_params, data, IdxT(ps.n_samples), uint32_t(ps.n_dims)));
+      handle, index_params, data, IdxT(ps.n_samples * train_fraction), uint32_t(ps.n_dims)));
     index.emplace(raft::spatial::knn::ivf_flat::extend<ValT, IdxT>(
       handle, index.value(), data, nullptr, IdxT(ps.n_samples)));
   }
@@ -208,7 +209,7 @@ struct faiss_ivf_flat {
   {
     RAFT_CUDA_TRY(cudaGetDevice(&(index.device)));
     index.gpu_res.reset(new raft::spatial::knn::RmmGpuResources());
-    index.gpu_res->noTempMemory();
+    //index.gpu_res->noTempMemory();
     index.gpu_res->setDefaultStream(index.device, handle.get_stream());
 
     index.metric = raft::distance::DistanceType::L2Expanded;

@@ -1,3 +1,43 @@
+# RAFT KNN benchmarks
+
+This is a fork of github.com/rapidsai/raft with small changes in benchmark parameters.
+
+## Introduction
+This repository contains benchmarks for two types of IVF flat implementation: RAFT IVF flat and FAISS.
+
+## Installation
+
+Get the sources
+```
+git clone https://github.com/tfeher/raft.git --branch raft_faiss_bench
+mkdir raft/cpp/build
+cd raft/cpp/build
+```
+Configure and build. Set the correct target architecture here
+```
+cmake .. -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_CUDA_ARCHITECTURES="80;86"
+make -j install
+```
+
+## Running the benchmark
+```
+./bench_raft --benchmark_filter=KNN --benchmark_min_warmup_time=10 --benchmark_format=csv
+```
+
+## Expected output
+Below is an example output for a benchmark
+```
+name,iterations,real_time,cpu_time,time_unit,bytes_per_second,items_per_second,label,error_occurred,error_message
+"KNN/float/int64_t/ivf_flat_knn_extend/0/0/0/manual_time",5,138.279,148.417,ms,,,"100000#128#1000#32#NO_COPY#BUILD",,
+"KNN/float/int64_t/ivf_flat_knn_extend/1/0/0/manual_time",1,692.531,789.813,ms,,,"2000000#128#1000#32#NO_COPY#BUILD",,
+"KNN/float/int64_t/ivf_flat_knn_extend/2/0/0/manual_time",1,3227.36,3696.57,ms,,,"10000000#128#1000#32#NO_COPY#BUILD",,
+"KNN/float/int64_t/faiss_ivf_flat/0/0/0/manual_time",3,219.545,308.501,ms,,,"100000#128#1000#32#NO_COPY#BUILD",,
+"KNN/float/int64_t/faiss_ivf_flat/1/0/0/manual_time",1,3204.18,3412.73,ms,,,"2000000#128#1000#32#NO_COPY#BUILD",,
+"KNN/float/int64_t/faiss_ivf_flat/2/0/0/manual_time",1,8163.61,8916.24,ms,,,"10000000#128#1000#32#NO_COPY#BUILD",,
+```
+
+# Below is the original readme from RAFT
+
 # <div align="left"><img src="https://rapids.ai/assets/images/rapids_logo.png" width="90px"/>&nbsp;RAFT: Reusable Accelerated Functions and Tools</div>
 
 RAFT contains fundamental widely-used algorithms and primitives for data science and machine learning. The algorithms are CUDA-accelerated and form building-blocks for rapidly composing analytics.
