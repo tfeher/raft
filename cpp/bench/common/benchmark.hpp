@@ -45,14 +45,14 @@ struct using_pool_memory_res {
   rmm::mr::pool_memory_resource<rmm::mr::device_memory_resource> pool_res_;
 
  public:
-  using_pool_memory_res(size_t initial_size, size_t max_size)
+  using_pool_memory_res(size_t initial_size)
     : orig_res_(rmm::mr::get_current_device_resource()),
-      pool_res_(&cuda_res_, initial_size, max_size)
+      pool_res_(&cuda_res_, initial_size)
   {
     rmm::mr::set_current_device_resource(&pool_res_);
   }
 
-  using_pool_memory_res() : using_pool_memory_res(size_t(1) << size_t(30), size_t(16) << size_t(30))
+  using_pool_memory_res() : using_pool_memory_res(size_t(1) << size_t(30))
   {
   }
 

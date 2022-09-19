@@ -449,7 +449,7 @@ const std::vector<params> kInputs_faiss{
   {2000000, 128, 1000, 32},
   {10000000, 128, 1000, 32},
   {20000000, 128, 1000, 32},
-  // {40000000, 128, 1000, 32},
+  {40000000, 128, 1000, 32},
 };
 const std::vector<Scope> kScopeBuild{Scope::BUILD};
 KNN_REGISTER(float, int64_t, ivf_flat_knn_extend, kInputs_faiss, kNoCopyOnly, kScopeBuild);
