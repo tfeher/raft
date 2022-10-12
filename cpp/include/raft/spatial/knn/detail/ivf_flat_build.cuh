@@ -19,6 +19,7 @@
 #include "../ivf_flat_types.hpp"
 #include "ann_kmeans_balanced.cuh"
 #include "ann_utils.cuh"
+#include "ann_serialization.h"
 
 #include <raft/core/handle.hpp>
 #include <raft/core/logger.hpp>
@@ -27,6 +28,7 @@
 #include <raft/util/pow2_utils.cuh>
 
 #include <rmm/cuda_stream_view.hpp>
+
 
 namespace raft::spatial::knn::ivf_flat::detail {
 
@@ -274,4 +276,87 @@ inline auto build(
   }
 }
 
+const int serialization_version = 1;
+
+template<typename T, typename IdxT>
+void save(handle_t& handle, const std::string& file, const index<T, IdxT>& index_) {
+  std::ofstream of(file, std::ios::out | std::ios::binary);
+  if (!of) {
+    std::cerr << "Cannot open " << file << std::endl;
+    return;
+  }
+
+  std::cout << "Size " << index_->size() << std::endl;
+  std::cout << "dim " << index_->dim() << std::endl;
+  write_scalar(of, serialization_version);
+  write_scalar(of, index_.size());
+  write_scalar(of, index_.dim());
+  write_scalar(of, index_.n_lists());
+  write_scalar(of, index_.metric());
+  write_scalar(of, index_.veclen());
+  write_mdspan(handle, of, index_.data());
+  write_mdspan(handle, of, index_.indices());
+  write_mdspan(handle, of, index_.list_sizes());
+  write_mdspan(handle, of, index_.list_offsets());
+  write_mdspan(handle, of, index_.centers());
+  if (index_.center_norms()) {
+    bool has_norms = true;
+    write_scalar(of, has_norms);
+    write_mdspan(handle, of, *index_.center_norms());
+  }
+  else {
+    bool has_norms = false;
+    write_scalar(of, has_norms);
+  }
+  of.close();
+  if (!of) {
+    std::cerr << "Error writing output " << file << std::endl;
+  }
+  return;
+}
+
+/** Load an index from file */
+template<typename T, typename IdxT>
+auto load(handle_t& handle, const std::string& file) -> index<T, IdxT>{
+  std::ifstream infile(file, std::ios::in | std::ios::binary);
+
+  if (!infile) {
+    std::cerr << "Cannot open " << file << std::endl;
+    return;
+  }
+
+  auto ver = read_scalar<int>(infile);
+  if (ver != serialization_version) {
+    std::cerr << "serialization version mismatch " << ver << " vs. "
+              << serialization_version;
+    return;
+  }
+  auto n_rows = read_scalar<IdxT>(infile);
+  auto dim = read_scalar<uint32_t>(infile);
+  auto n_lists = read_scalar<uint32_t>(infile);
+  auto metric = read_scalar<raft::distance::DistanceType>(infile);
+  auto veclen = read_scalar<uint32_t>(infile);
+
+  index<T, IdxT> index_ = raft::spatial::knn::ivf_flat::index<T, IdxT>(handle, metric, n_lists, dim);
+
+  index_.allocate(handle, n_rows, metric == raft::distance::DistanceType::L2Expanded);
+  auto data = index_->data();
+  read_mdspan(handle, infile, data);
+  read_mdspan(handle, infile, index_.indices());
+  read_mdspan(handle, infile, index_.list_sizes());
+  read_mdspan(handle, infile, index_.list_offsets());
+  read_mdspan(handle, infile, index_.centers());
+  bool has_norms = read_scalar<bool>(infile);
+  if (has_norms) {
+    if (!index_.center_norms()) {
+      std::cerr << "Error inconsistent center norms" << std::endl;
+    }
+    else {
+      auto center_norms = *index_.center_norms();
+      read_mdspan(handle, infile, center_norms);
+    }
+  }
+  infile.close();
+  return index_;
+}
 }  // namespace raft::spatial::knn::ivf_flat::detail
