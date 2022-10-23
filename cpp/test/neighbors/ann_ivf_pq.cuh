@@ -22,6 +22,7 @@
 #include <raft/distance/distance_types.hpp>
 #include <raft/random/rng.cuh>
 #include <raft/spatial/knn/ivf_pq.cuh>
+#include <raft/neighbors/ivf_pq.cuh>
 #if defined RAFT_NN_COMPILED
 #include <raft/spatial/knn/specializations.cuh>
 #else
@@ -192,7 +193,11 @@ class ivf_pq_test : public ::testing::TestWithParam<ivf_pq_inputs> {
   template <typename BuildIndex>
   auto run(BuildIndex build_index)
   {
-    auto index = build_index();
+    {
+      auto index = build_index();
+      raft::neighbors::ivf_pq::save<IdxT>(handle_, "ivf_pq_index", index);
+    }
+    auto index = raft::neighbors::ivf_pq::load<IdxT>(handle_, "ivf_pq_index");
 
     size_t queries_size = ps.num_queries * ps.k;
     std::vector<IdxT> indices_ivf_pq(queries_size);
@@ -484,4 +489,4 @@ inline auto special_cases() -> test_cases_t
 #define INSTANTIATE(type, vals) \
   INSTANTIATE_TEST_SUITE_P(IvfPq, type, ::testing::ValuesIn(vals)); /* NOLINT */
 
-}  // namespace raft::spatial::knn
+}  // namespace raft::neighbors

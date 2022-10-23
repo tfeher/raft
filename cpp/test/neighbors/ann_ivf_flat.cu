@@ -23,6 +23,7 @@
 #include <raft/random/rng.cuh>
 #include <raft/spatial/knn/ann.cuh>
 #include <raft/spatial/knn/ivf_flat.cuh>
+#include <raft/neighbors/ivf_flat.cuh>
 #include <raft/spatial/knn/knn.cuh>
 
 #include <rmm/cuda_stream_view.hpp>
@@ -177,9 +178,9 @@ class AnnIVFFlatTest : public ::testing::TestWithParam<AnnIvfFlatInputs<IdxT>> {
                          vector_indices.data() + half_of_data,
                          IdxT(ps.num_db_vecs) - half_of_data);
 
-        raft::spatial::knn::ivf_flat::save(handle_, "ivf_flat_index", index);
+        raft::neighbors::ivf_flat::save(handle_, "ivf_flat_index", index);
     
-        auto index_loaded = raft::spatial::knn::ivf_flat::load<DataT, IdxT>(handle_, "ivf_flat_index");
+        auto index_loaded = raft::neighbors::ivf_flat::load<DataT, IdxT>(handle_, "ivf_flat_index");
 
         ivf_flat::search(handle_,
                          search_params,

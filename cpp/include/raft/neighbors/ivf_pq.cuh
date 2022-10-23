@@ -199,12 +199,12 @@ inline void search(const handle_t& handle,
 
 
 template <typename IdxT>
-  void save(const std::string& filename, const index<IdxT>& index_) {
-    return raft::spatial::knn::ivf_pq::detail::save(filename, index_);
+  void save(const handle_t& handle, const std::string& filename, const index<IdxT>& index_) {
+    return raft::spatial::knn::ivf_pq::detail::save<IdxT>(handle, filename, index_);
   }
 
 template <typename IdxT>
-  auto load(const std::string& filename) -> index<IdxT> {
-    return raft::spatial::knn::ivf_pq::detail::load(filename);
+  auto load(const handle_t& handle, const std::string& filename) -> index<IdxT> {
+    return raft::spatial::knn::ivf_pq::detail::load<IdxT>(handle, filename);
   }
 }  // namespace raft::neighbors::ivf_pq

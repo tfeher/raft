@@ -284,7 +284,7 @@ void select_residuals(const handle_t& handle,
  * @param device_memory
  */
 template <typename T, typename IdxT>
-void compute_pq_codes(const handle_t& handle,
+void compute_pq_codes(const handle_t& handle ,
                       IdxT n_rows,
                       uint32_t data_dim,
                       uint32_t rot_dim,
@@ -319,7 +319,11 @@ void compute_pq_codes(const handle_t& handle,
   // Compute PQ code
   //
   utils::memzero(pq_dataset, n_rows * pq_dim * pq_bits / 8, stream);
-
+  std::cout<<"max_cluster_size " << max_cluster_size << std::endl;
+  std::cout<<"rot vectors size " << static_cast<size_t>(max_cluster_size) * rot_dim << std::endl; 
+  std::cout<<"sub vectors size " << static_cast<size_t>(max_cluster_size) * pq_dim * pq_len << std::endl; 
+  std::cout<<"my_pq_dataset size " << static_cast<size_t>(max_cluster_size) * pq_dim * pq_bits/8 << std::endl; 
+  
   rmm::device_uvector<float> rot_vectors(max_cluster_size * rot_dim, stream, device_memory);
   rmm::device_uvector<float> sub_vectors(max_cluster_size * pq_dim * pq_len, stream, device_memory);
   rmm::device_uvector<uint32_t> sub_vector_labels(max_cluster_size * pq_dim, stream, device_memory);
@@ -1078,50 +1082,50 @@ inline auto build(
 const int serialization_version = 1;
 
 template<typename IdxT>
-void save(const std::string& filename, const index<IdxT>& index_) {
-  std::ofstream of(file, std::ios::out | std::ios::binary);
+void save(const handle_t& handle_, const std::string& filename, const index<IdxT>& index_) {
+  std::ofstream of(filename, std::ios::out | std::ios::binary);
   if (!of) {
-    std::cerr << "Cannot open " << file << std::endl;
+    std::cerr << "Cannot open " << filename << std::endl;
     return;
   }
 
-  std::cout << "Size " << index_->size() << std::endl;
-  std::cout << "dim " << index_->dim() << std::endl;
-  std::cout << "pq_dim, bits " << index_->pq_dim() << ", " << index_->pq_bits()
+  std::cout << "Size " << index_.size() << std::endl;
+  std::cout << "dim " << index_.dim() << std::endl;
+  std::cout << "pq_dim, bits " << index_.pq_dim() << ", " << index_.pq_bits()
             << std::endl;
 
   write_scalar(of, serialization_version);
-  write_scalar(of, index_->size());
-  write_scalar(of, index_->dim());
-  write_scalar(of, index_->pq_bits());
-  write_scalar(of, index_->pq_dim());
+  write_scalar(of, index_.size());
+  write_scalar(of, index_.dim());
+  write_scalar(of, index_.pq_bits());
+  write_scalar(of, index_.pq_dim());
 
-  write_scalar(of, index_->metric());
-  write_scalar(of, index_->codebook_kind());
-  write_scalar(of, index_->n_lists());
-  write_scalar(of, index_->n_nonempty_lists());
+  write_scalar(of, index_.metric());
+  write_scalar(of, index_.codebook_kind());
+  write_scalar(of, index_.n_lists());
+  write_scalar(of, index_.n_nonempty_lists());
 
-  write_mdspan(handle_, of, index_->pq_centers());
-  write_mdspan(handle_, of, index_->pq_dataset());
-  write_mdspan(handle_, of, index_->indices());
-  write_mdspan(handle_, of, index_->rotation_matrix());
-  write_mdspan(handle_, of, index_->list_offsets());
-  write_mdspan(handle_, of, index_->centers());
-  write_mdspan(handle_, of, index_->centers_rot());
+  write_mdspan(handle_, of, index_.pq_centers());
+  write_mdspan(handle_, of, index_.pq_dataset());
+  write_mdspan(handle_, of, index_.indices());
+  write_mdspan(handle_, of, index_.rotation_matrix());
+  write_mdspan(handle_, of, index_.list_offsets());
+  write_mdspan(handle_, of, index_.centers());
+  write_mdspan(handle_, of, index_.centers_rot());
 
   of.close();
   if (!of) {
-    std::cerr << "Error writing output " << file << std::endl;
+    std::cerr << "Error writing output " << filename << std::endl;
   }
   return;
 }
 
 template<typename IdxT>
-auto load(const std::string& filename) -> index<T, IdxT> {
-  std::ifstream infile(file, std::ios::in | std::ios::binary);
+auto load(const handle_t& handle_, const std::string& filename) -> index<IdxT> {
+  std::ifstream infile(filename, std::ios::in | std::ios::binary);
 
   if (!infile) {
-    std::cerr << "Cannot open " << file << std::endl;
+    std::cerr << "Cannot open " << filename << std::endl;
     return;
   }
 
@@ -1146,17 +1150,17 @@ auto load(const std::string& filename) -> index<T, IdxT> {
   std::cout << "pq_dim, bits " << pq_dim << ", " << pq_bits << std::endl;
   std::cout << "dim " << n_lists << std::endl;
 
-  index_ = raft::spatial::knn::ivf_pq::index<IdxT>(
+  auto index_ = raft::spatial::knn::ivf_pq::index<IdxT>(
       handle_, metric, codebook_kind, n_lists, dim, pq_bits, pq_dim, n_nonempty_lists);
-  index_->allocate(handle_, n_rows);
+  index_.allocate(handle_, n_rows);
 
-  read_mdspan(handle_, infile, index_->pq_centers());
-  read_mdspan(handle_, infile, index_->pq_dataset());
-  read_mdspan(handle_, infile, index_->indices());
-  read_mdspan(handle_, infile, index_->rotation_matrix());
-  read_mdspan(handle_, infile, index_->list_offsets());
-  read_mdspan(handle_, infile, index_->centers());
-  read_mdspan(handle_, infile, index_->centers_rot());
+  read_mdspan(handle_, infile, index_.pq_centers());
+  read_mdspan(handle_, infile, index_.pq_dataset());
+  read_mdspan(handle_, infile, index_.indices());
+  read_mdspan(handle_, infile, index_.rotation_matrix());
+  read_mdspan(handle_, infile, index_.list_offsets());
+  read_mdspan(handle_, infile, index_.centers());
+  read_mdspan(handle_, infile, index_.centers_rot());
 
   infile.close();
 

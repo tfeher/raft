@@ -286,8 +286,8 @@ void save(handle_t& handle, const std::string& file, const index<T, IdxT>& index
     return;
   }
 
-  std::cout << "Size " << index_->size() << std::endl;
-  std::cout << "dim " << index_->dim() << std::endl;
+  std::cout << "Size " << index_.size() << std::endl;
+  std::cout << "dim " << index_.dim() << std::endl;
   write_scalar(of, serialization_version);
   write_scalar(of, index_.size());
   write_scalar(of, index_.dim());
@@ -340,7 +340,7 @@ auto load(handle_t& handle, const std::string& file) -> index<T, IdxT>{
   index<T, IdxT> index_ = raft::spatial::knn::ivf_flat::index<T, IdxT>(handle, metric, n_lists, dim);
 
   index_.allocate(handle, n_rows, metric == raft::distance::DistanceType::L2Expanded);
-  auto data = index_->data();
+  auto data = index_.data();
   read_mdspan(handle, infile, data);
   read_mdspan(handle, infile, index_.indices());
   read_mdspan(handle, infile, index_.list_sizes());

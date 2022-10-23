@@ -65,10 +65,11 @@ void write_mdspan(
     const raft::handle_t& handle,
     std::ofstream& of,
     const raft::device_mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy>& obj) {
+  using obj_t = raft::device_mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy>;
   write_scalar(of, obj.rank());
   write_scalar(of, obj.size());
   if (obj.size() > 0) {
-    for (int i = 0; i < obj.rank(); i++) write_scalar(of, obj.extent(i));
+    for (typename obj_t::rank_type i = 0; i < obj.rank(); i++) write_scalar(of, obj.extent(i));
     cudaStream_t stream = handle.get_stream();
     std::vector<
         typename raft::device_mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy>::
@@ -110,7 +111,7 @@ void read_mdspan(
               << std::endl;
   }
   if (obj.size() > 0) {
-    for (int i = 0; i < obj.rank(); i++) {
+    for (typename obj_t::rank_type i = 0; i < obj.rank(); i++) {
       auto ex = read_scalar<typename obj_t::index_type>(file);
       if (obj.extent(i) != ex) {
         std::cerr << "Incorrect extent while reading mdarray " << ex << " vs. "
