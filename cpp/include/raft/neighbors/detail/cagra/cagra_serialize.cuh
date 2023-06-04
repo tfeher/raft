@@ -25,7 +25,7 @@
 namespace raft::neighbors::experimental::cagra::detail {
 
 // Serialization version 1.
-constexpr int serialization_version = 1;
+constexpr int serialization_version = 2;
 
 // NB: we wrap this check in a struct, so that the updated RealSize is easy to see in the error
 // message.
@@ -36,7 +36,8 @@ struct check_index_layout {
                 "paste in the new size and consider updating the serialization logic");
 };
 
-template struct check_index_layout<sizeof(index<double, std::uint64_t>), 136>;
+constexpr size_t expected_size = 176;
+template struct check_index_layout<sizeof(index<double, std::uint64_t>), expected_size>;
 
 /**
  * Save the index to file.
@@ -59,7 +60,19 @@ void serialize(raft::resources const& res, std::ostream& os, const index<T, IdxT
   serialize_scalar(res, os, index_.dim());
   serialize_scalar(res, os, index_.graph_degree());
   serialize_scalar(res, os, index_.metric());
-  serialize_mdspan(res, os, index_.dataset());
+  auto dataset = index_.dataset();
+  // Remove padding before saving the dataset
+  auto host_dataset = make_host_matrix<T, IdxT>(dataset.extent(0), dataset.extent(1));
+  RAFT_CUDA_TRY(cudaMemcpy2DAsync(host_dataset.data_handle(),
+                                  sizeof(T) * host_dataset.extent(1),
+                                  dataset.data_handle(),
+                                  sizeof(T) * dataset.extent(1),
+                                  sizeof(T) * host_dataset.extent(1),
+                                  dataset.extent(0),
+                                  cudaMemcpyDefault,
+                                  resource::get_cuda_stream(res)));
+  resource::sync_stream(res);
+  serialize_mdspan(res, os, host_dataset.view());
   serialize_mdspan(res, os, index_.graph());
 }
 

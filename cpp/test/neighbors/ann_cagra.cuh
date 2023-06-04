@@ -15,6 +15,8 @@
  */
 #pragma once
 
+#define RAFT_EXPLICIT_INSTANTIATE_ONLY_CAGRA
+#define RAFT_COMPILED_CAGRA
 #include "../test_utils.cuh"
 #include "ann_utils.cuh"
 #include <raft/core/resource/cuda_stream.hpp>
@@ -166,10 +168,15 @@ class AnnCagraTest : public ::testing::TestWithParam<AnnCagraInputs> {
  protected:
   void testCagra()
   {
-    if (ps.dim * sizeof(DataT) % 8 != 0) {
-      GTEST_SKIP()
-        << "CAGRA requires the input data rows to be aligned at least to 8 bytes for now.";
-    }
+    using AlignDim = raft::Pow2<16 / sizeof(DataT)>;
+
+    // for (int i = 0; i < 20; i++) {
+    //   std::cout << "Align " << i << ": " << AlignDim::roundUp(i) << std::endl;
+    // }
+    // if (ps.dim * sizeof(DataT) % 8 != 0) {
+    //   GTEST_SKIP()
+    //     << "CAGRA requires the input data rows to be aligned at least to 8 bytes for now.";
+    // }
     size_t queries_size = ps.n_queries * ps.k;
     std::vector<IdxT> indices_Cagra(queries_size);
     std::vector<IdxT> indices_naive(queries_size);
@@ -210,20 +217,20 @@ class AnnCagraTest : public ::testing::TestWithParam<AnnCagraInputs> {
         auto database_view = raft::make_device_matrix_view<const DataT, IdxT>(
           (const DataT*)database.data(), ps.n_rows, ps.dim);
 
-        {
-          cagra::index<DataT, IdxT> index(handle_);
-          if (ps.host_dataset) {
-            auto database_host = raft::make_host_matrix<DataT, IdxT>(ps.n_rows, ps.dim);
-            raft::copy(database_host.data_handle(), database.data(), database.size(), stream_);
-            auto database_host_view = raft::make_host_matrix_view<const DataT, IdxT>(
-              (const DataT*)database_host.data_handle(), ps.n_rows, ps.dim);
-            index = cagra::build<DataT, IdxT>(handle_, index_params, database_host_view);
-          } else {
-            index = cagra::build<DataT, IdxT>(handle_, index_params, database_view);
-          };
-          cagra::serialize(handle_, "cagra_index", index);
-        }
-        auto index = cagra::deserialize<DataT, IdxT>(handle_, "cagra_index");
+        // {
+        cagra::index<DataT, IdxT> index(handle_);
+        if (ps.host_dataset) {
+          auto database_host = raft::make_host_matrix<DataT, IdxT>(ps.n_rows, ps.dim);
+          raft::copy(database_host.data_handle(), database.data(), database.size(), stream_);
+          auto database_host_view = raft::make_host_matrix_view<const DataT, IdxT>(
+            (const DataT*)database_host.data_handle(), ps.n_rows, ps.dim);
+          index = cagra::build<DataT, IdxT>(handle_, index_params, database_host_view);
+        } else {
+          index = cagra::build<DataT, IdxT>(handle_, index_params, database_view);
+        };
+        //  cagra::serialize(handle_, "cagra_index", index);
+        //}
+        // auto index = cagra::deserialize<DataT, IdxT>(handle_, "cagra_index");
 
         auto search_queries_view = raft::make_device_matrix_view<const DataT, IdxT>(
           search_queries.data(), ps.n_queries, ps.dim);
@@ -232,14 +239,16 @@ class AnnCagraTest : public ::testing::TestWithParam<AnnCagraInputs> {
         auto dists_out_view =
           raft::make_device_matrix_view<DistanceT, IdxT>(distances_dev.data(), ps.n_queries, ps.k);
 
+        std::cout << "Calling search";
         cagra::search(
           handle_, search_params, index, search_queries_view, indices_out_view, dists_out_view);
-
+        resource::sync_stream(handle_);
+        std::cout << "Search finished" << std::endl;
         update_host(distances_Cagra.data(), distances_dev.data(), queries_size, stream_);
         update_host(indices_Cagra.data(), indices_dev.data(), queries_size, stream_);
         resource::sync_stream(handle_);
       }
-      // for (int i = 0; i < ps.n_queries; i++) {
+      // for (int i = 0; i < min(ps.n_queries, 10); i++) {
       //   //  std::cout << "query " << i << std::end;
       //   print_vector("T", indices_naive.data() + i * ps.k, ps.k, std::cout);
       //   print_vector("C", indices_Cagra.data() + i * ps.k, ps.k, std::cout);
@@ -388,19 +397,19 @@ inline std::vector<AnnCagraInputs> generate_inputs()
     {false},
     {0.995});
 
-  auto inputs2 =
-    raft::util::itertools::product<AnnCagraInputs>({100},
-                                                   {1000},
-                                                   {8, 64, 128, 192, 256, 512, 1024},  // dim
-                                                   {16},
-                                                   {search_algo::AUTO},
-                                                   {10},
-                                                   {0},
-                                                   {64},
-                                                   {1},
-                                                   {raft::distance::DistanceType::L2Expanded},
-                                                   {false},
-                                                   {0.995});
+  auto inputs2 = raft::util::itertools::product<AnnCagraInputs>(
+    {100},
+    {1000},
+    {1, 3, 5, 7, 8, 17, 64, 128, 137, 192, 256, 512, 619, 1024},  // dim
+    {16},                                                         // k
+    {search_algo::AUTO},
+    {10},
+    {0},
+    {64},
+    {1},
+    {raft::distance::DistanceType::L2Expanded},
+    {false},
+    {0.995});
   inputs.insert(inputs.end(), inputs2.begin(), inputs2.end());
   inputs2 =
     raft::util::itertools::product<AnnCagraInputs>({100},

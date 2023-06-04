@@ -46,9 +46,6 @@ void build_knn_graph(raft::resources const& res,
                      std::optional<ivf_pq::index_params> build_params   = std::nullopt,
                      std::optional<ivf_pq::search_params> search_params = std::nullopt)
 {
-  RAFT_EXPECTS(
-    dataset.extent(1) * sizeof(DataT) % 8 == 0,
-    "Dataset rows are expected to have at least 8 bytes alignment. Try padding feature dims.");
 
   RAFT_EXPECTS(!build_params || build_params->metric == distance::DistanceType::L2Expanded,
                "Currently only L2Expanded metric is supported");
@@ -86,7 +83,7 @@ void build_knn_graph(raft::resources const& res,
     return std::string(model_name);
   }();
 
-  RAFT_LOG_DEBUG("# Building IVF-PQ index %s", model_name.c_str());
+  RAFT_LOG_INFO("# Building IVF-PQ index %s", model_name.c_str());
   auto index = ivf_pq::build<DataT, int64_t>(
     res, *build_params, dataset.data_handle(), dataset.extent(0), dataset.extent(1));
 
@@ -104,7 +101,7 @@ void build_knn_graph(raft::resources const& res,
   gpu_top_k                 = std::min<IdxT>(std::max(gpu_top_k, top_k), dataset.extent(0));
   const auto num_queries    = dataset.extent(0);
   const auto max_batch_size = 1024;
-  RAFT_LOG_DEBUG(
+  RAFT_LOG_INFO(
     "IVF-PQ search node_degree: %d, top_k: %d,  gpu_top_k: %d,  max_batch_size:: %d, n_probes: %u",
     node_degree,
     top_k,
@@ -129,7 +126,7 @@ void build_knn_graph(raft::resources const& res,
 
   rmm::mr::device_memory_resource* device_memory = nullptr;
   auto pool_guard = raft::get_pool_memory_resource(device_memory, 1024 * 1024);
-  if (pool_guard) { RAFT_LOG_DEBUG("ivf_pq using pool memory resource"); }
+  if (pool_guard) { RAFT_LOG_INFO("ivf_pq using pool memory resource"); }
 
   raft::spatial::knn::detail::utils::batch_load_iterator<DataT> vec_batches(
     dataset.data_handle(),
@@ -219,7 +216,7 @@ void build_knn_graph(raft::resources const& res,
     const auto time =
       std::chrono::duration_cast<std::chrono::microseconds>(end_clock - start_clock).count() * 1e-6;
     const auto throughput = num_queries_done / time;
-    RAFT_LOG_DEBUG(
+    RAFT_LOG_INFO(
       "# Search %12lu / %12lu (%3.2f %%), %e queries/sec, %.2f minutes ETA, self included = "
       "%3.2f %%    \r",
       num_queries_done,
@@ -230,7 +227,7 @@ void build_knn_graph(raft::resources const& res,
       static_cast<double>(num_self_included) / num_queries_done * 100.);
     first = false;
   }
-  if (!first) RAFT_LOG_DEBUG("# Finished building kNN graph");
+  if (!first) RAFT_LOG_INFO("# Finished building kNN graph");
 }
 
 }  // namespace raft::neighbors::experimental::cagra::detail

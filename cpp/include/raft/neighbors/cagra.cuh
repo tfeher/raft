@@ -237,21 +237,28 @@ index<T, IdxT> build(raft::resources const& res,
                      const index_params& params,
                      mdspan<const T, matrix_extent<IdxT>, row_major, Accessor> dataset)
 {
-  size_t degree = params.intermediate_graph_degree;
+  size_t degree       = params.intermediate_graph_degree;
+  size_t graph_degree = params.graph_degree;
   if (degree >= static_cast<size_t>(dataset.extent(0))) {
     RAFT_LOG_WARN(
       "Intermediate graph degree cannot be larger than dataset size, reducing it to %lu",
       dataset.extent(0));
     degree = dataset.extent(0) - 1;
   }
-  RAFT_EXPECTS(degree >= params.graph_degree,
-               "Intermediate graph degree cannot be smaller than final graph degree");
+  if (degree < graph_degree) {
+    RAFT_LOG_WARN(
+      "Graph degree (%lu) cannot be larger than intermediate graph degree (%lu), reducing "
+      "graph_degree.",
+      graph_degree,
+      degree);
+    graph_degree = degree;
+  }
 
   auto knn_graph = raft::make_host_matrix<IdxT, IdxT>(dataset.extent(0), degree);
 
   build_knn_graph(res, dataset, knn_graph.view());
 
-  auto cagra_graph = raft::make_host_matrix<IdxT, IdxT>(dataset.extent(0), params.graph_degree);
+  auto cagra_graph = raft::make_host_matrix<IdxT, IdxT>(dataset.extent(0), graph_degree);
 
   prune<IdxT>(res, knn_graph.view(), cagra_graph.view());
 
@@ -291,9 +298,6 @@ void search(raft::resources const& res,
   RAFT_EXPECTS(neighbors.extent(1) == distances.extent(1),
                "Number of columns in output neighbors and distances matrices must equal k");
 
-  RAFT_EXPECTS(queries.extent(1) == idx.dim(),
-               "Number of query dimensions should equal number of dimensions in the index.");
-
   using internal_IdxT   = typename std::make_unsigned<IdxT>::type;
   auto queries_internal = raft::make_device_matrix_view<const T, internal_IdxT, row_major>(
     queries.data_handle(), queries.extent(0), queries.extent(1));
@@ -304,8 +308,29 @@ void search(raft::resources const& res,
   auto distances_internal = raft::make_device_matrix_view<float, internal_IdxT, row_major>(
     distances.data_handle(), distances.extent(0), distances.extent(1));
 
+  auto padded_dim = idx.dataset().stride(0);
+  // if (queries.extent(1) != padded_dim) {
+  //   RAFT_LOG_INFO("queries_extent %u, idx_dim %u copying", queries.extent(1), padded_dim);
+  //   auto queries2 = make_device_matrix<T, internal_IdxT>(res, queries.extent(0), padded_dim);
+  //   RAFT_CUDA_TRY(cudaMemsetAsync(
+  //     queries2.data_handle(), 0, queries2.size() * sizeof(T), resource::get_cuda_stream(res)));
+  //   RAFT_CUDA_TRY(cudaMemcpy2DAsync(queries2.data_handle(),
+  //                                   sizeof(T) * queries2.extent(1),
+  //                                   queries_internal.data_handle(),
+  //                                   sizeof(T) * queries_internal.extent(1),
+  //                                   sizeof(T) * queries_internal.extent(1),
+  //                                   queries_internal.extent(0),
+  //                                   cudaMemcpyDefault,
+  //                                   resource::get_cuda_stream(res)));
+
+  //   detail::search_main(
+  //     res, params, idx, make_const_mdspan(queries2.view()), neighbors_internal,
+  //     distances_internal);
+  // } else {
+  RAFT_LOG_INFO("queries_extent %u, idx_dim %u, no need to copy", queries.extent(1), idx.dim());
   detail::search_main<T, internal_IdxT, IdxT>(
     res, params, idx, queries_internal, neighbors_internal, distances_internal);
+  // }
 }
 /** @} */  // end group cagra
 
