@@ -64,7 +64,7 @@ void search_main(raft::resources const& res,
   RAFT_LOG_DEBUG("# query size = %lu, dim = %lu\n",
                  static_cast<size_t>(queries.extent(0)),
                  static_cast<size_t>(queries.extent(1)));
-  // RAFT_EXPECTS(queries.extent(1) == index.dim(), "Querise and index dim must match");
+  RAFT_EXPECTS(queries.extent(1) == index.dim(), "Querise and index dim must match");
   uint32_t topk = neighbors.extent(1);
 
   std::unique_ptr<search_plan_impl<T, internal_IdxT, DistanceT>> plan =

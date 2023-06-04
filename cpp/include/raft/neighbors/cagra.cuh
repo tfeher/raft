@@ -308,29 +308,8 @@ void search(raft::resources const& res,
   auto distances_internal = raft::make_device_matrix_view<float, internal_IdxT, row_major>(
     distances.data_handle(), distances.extent(0), distances.extent(1));
 
-  auto padded_dim = idx.dataset().stride(0);
-  // if (queries.extent(1) != padded_dim) {
-  //   RAFT_LOG_INFO("queries_extent %u, idx_dim %u copying", queries.extent(1), padded_dim);
-  //   auto queries2 = make_device_matrix<T, internal_IdxT>(res, queries.extent(0), padded_dim);
-  //   RAFT_CUDA_TRY(cudaMemsetAsync(
-  //     queries2.data_handle(), 0, queries2.size() * sizeof(T), resource::get_cuda_stream(res)));
-  //   RAFT_CUDA_TRY(cudaMemcpy2DAsync(queries2.data_handle(),
-  //                                   sizeof(T) * queries2.extent(1),
-  //                                   queries_internal.data_handle(),
-  //                                   sizeof(T) * queries_internal.extent(1),
-  //                                   sizeof(T) * queries_internal.extent(1),
-  //                                   queries_internal.extent(0),
-  //                                   cudaMemcpyDefault,
-  //                                   resource::get_cuda_stream(res)));
-
-  //   detail::search_main(
-  //     res, params, idx, make_const_mdspan(queries2.view()), neighbors_internal,
-  //     distances_internal);
-  // } else {
-  RAFT_LOG_INFO("queries_extent %u, idx_dim %u, no need to copy", queries.extent(1), idx.dim());
   detail::search_main<T, internal_IdxT, IdxT>(
     res, params, idx, queries_internal, neighbors_internal, distances_internal);
-  // }
 }
 /** @} */  // end group cagra
 

@@ -168,15 +168,6 @@ class AnnCagraTest : public ::testing::TestWithParam<AnnCagraInputs> {
  protected:
   void testCagra()
   {
-    using AlignDim = raft::Pow2<16 / sizeof(DataT)>;
-
-    // for (int i = 0; i < 20; i++) {
-    //   std::cout << "Align " << i << ": " << AlignDim::roundUp(i) << std::endl;
-    // }
-    // if (ps.dim * sizeof(DataT) % 8 != 0) {
-    //   GTEST_SKIP()
-    //     << "CAGRA requires the input data rows to be aligned at least to 8 bytes for now.";
-    // }
     size_t queries_size = ps.n_queries * ps.k;
     std::vector<IdxT> indices_Cagra(queries_size);
     std::vector<IdxT> indices_naive(queries_size);

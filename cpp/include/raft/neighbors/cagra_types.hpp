@@ -187,22 +187,16 @@ struct index : ann::index {
         make_device_matrix<T, IdxT>(res, dataset.extent(0), AlignDim::roundUp(dataset.extent(1)))),
       graph_(make_device_matrix<IdxT, IdxT>(res, knn_graph.extent(0), knn_graph.extent(1)))
   {
-    for (int i = 0; i < 20; i++) {
-      std::cout << "Align " << i << ": " << AlignDim::roundUp(i) << std::endl;
-    }
-    std::cout << "dataset.extent(1) " << dataset.extent(1) << "_" << dataset_.extent(1)
-              << std::endl;
     RAFT_EXPECTS(dataset.extent(0) == knn_graph.extent(0),
                  "Dataset and knn_graph must have equal number of rows");
     if (dataset_.extent(1) == dataset.extent(1)) {
-      RAFT_LOG_INFO("No padding added to dataset");
       raft::copy(dataset_.data_handle(),
                  dataset.data_handle(),
                  dataset.size(),
                  resource::get_cuda_stream(res));
     } else {
       // copy with padding
-      RAFT_LOG_INFO("Creating a padded copy of the dataset, size %zux%u dim",
+      RAFT_LOG_DEBUG("Creating a padded copy of the dataset, size %zux%u dim",
                     static_cast<size_t>(dataset_.extent(0)),
                     static_cast<uint32_t>(dataset_.extent(1)));
       RAFT_CUDA_TRY(cudaMemsetAsync(
@@ -218,7 +212,7 @@ struct index : ann::index {
     }
     dataset_view_ = make_device_strided_matrix_view<T, IdxT>(
       dataset_.data_handle(), dataset_.extent(0), dataset.extent(1), dataset_.extent(1));
-    RAFT_LOG_INFO("created strided matrix view, %zu %zu %zu",
+    RAFT_LOG_DEBUG("created dataset strided matrix view, %zu %zu %zu",
                   static_cast<size_t>(dataset_view_.extent(0)),
                   static_cast<size_t>(dataset_view_.extent(1)),
                   static_cast<size_t>(dataset_view_.stride(0)));
