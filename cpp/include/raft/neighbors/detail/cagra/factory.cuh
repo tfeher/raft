@@ -71,19 +71,19 @@ class factory {
   static std::unique_ptr<search_plan_impl<T, IdxT, DistanceT>> dispatch_kernel(
     raft::resources const& res, search_plan_impl_base& plan)
   {
-    // if (plan.algo == search_algo::SINGLE_CTA) {
-    return std::unique_ptr<search_plan_impl<T, IdxT, DistanceT>>(
-      new single_cta_search::search<TEAM_SIZE, MAX_DATASET_DIM, T, IdxT, DistanceT>(
-        res, plan, plan.dim, plan.graph_degree, plan.topk));
-    // } else if (plan.algo == search_algo::MULTI_CTA) {
-    //   return std::unique_ptr<search_plan_impl<T, IdxT, DistanceT>>(
-    //     new multi_cta_search::search<TEAM_SIZE, MAX_DATASET_DIM, T, IdxT, DistanceT>(
-    //       res, plan, plan.dim, plan.graph_degree, plan.topk));
-    // } else {
-    //   return std::unique_ptr<search_plan_impl<T, IdxT, DistanceT>>(
-    //     new multi_kernel_search::search<TEAM_SIZE, MAX_DATASET_DIM, T, IdxT, DistanceT>(
-    //       res, plan, plan.dim, plan.graph_degree, plan.topk));
-    // }
+    if (plan.algo == search_algo::SINGLE_CTA) {
+      return std::unique_ptr<search_plan_impl<T, IdxT, DistanceT>>(
+        new single_cta_search::search<TEAM_SIZE, MAX_DATASET_DIM, T, IdxT, DistanceT>(
+          res, plan, plan.dim, plan.graph_degree, plan.topk));
+    } else if (plan.algo == search_algo::MULTI_CTA) {
+      return std::unique_ptr<search_plan_impl<T, IdxT, DistanceT>>(
+        new multi_cta_search::search<TEAM_SIZE, MAX_DATASET_DIM, T, IdxT, DistanceT>(
+          res, plan, plan.dim, plan.graph_degree, plan.topk));
+    } else {
+      return std::unique_ptr<search_plan_impl<T, IdxT, DistanceT>>(
+        new multi_kernel_search::search<TEAM_SIZE, MAX_DATASET_DIM, T, IdxT, DistanceT>(
+          res, plan, plan.dim, plan.graph_degree, plan.topk));
+    }
   }
 };
 };  // namespace raft::neighbors::experimental::cagra::detail

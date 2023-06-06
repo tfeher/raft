@@ -196,9 +196,6 @@ struct index : ann::index {
                  resource::get_cuda_stream(res));
     } else {
       // copy with padding
-      RAFT_LOG_DEBUG("Creating a padded copy of the dataset, size %zux%u dim",
-                    static_cast<size_t>(dataset_.extent(0)),
-                    static_cast<uint32_t>(dataset_.extent(1)));
       RAFT_CUDA_TRY(cudaMemsetAsync(
         dataset_.data_handle(), 0, dataset_.size() * sizeof(T), resource::get_cuda_stream(res)));
       RAFT_CUDA_TRY(cudaMemcpy2DAsync(dataset_.data_handle(),
@@ -212,7 +209,7 @@ struct index : ann::index {
     }
     dataset_view_ = make_device_strided_matrix_view<T, IdxT>(
       dataset_.data_handle(), dataset_.extent(0), dataset.extent(1), dataset_.extent(1));
-    RAFT_LOG_DEBUG("created dataset strided matrix view, %zu %zu %zu",
+    RAFT_LOG_DEBUG("CAGRA dataset strided matrix view %zux%zu, stride %zu",
                   static_cast<size_t>(dataset_view_.extent(0)),
                   static_cast<size_t>(dataset_view_.extent(1)),
                   static_cast<size_t>(dataset_view_.stride(0)));

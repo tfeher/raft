@@ -237,24 +237,24 @@ index<T, IdxT> build(raft::resources const& res,
                      const index_params& params,
                      mdspan<const T, matrix_extent<IdxT>, row_major, Accessor> dataset)
 {
-  size_t degree       = params.intermediate_graph_degree;
+  size_t intermediate_degree       = params.intermediate_graph_degree;
   size_t graph_degree = params.graph_degree;
-  if (degree >= static_cast<size_t>(dataset.extent(0))) {
+  if (intermediate_degree >= static_cast<size_t>(dataset.extent(0))) {
     RAFT_LOG_WARN(
       "Intermediate graph degree cannot be larger than dataset size, reducing it to %lu",
       dataset.extent(0));
-    degree = dataset.extent(0) - 1;
+    intermediate_degree = dataset.extent(0) - 1;
   }
-  if (degree < graph_degree) {
+  if (intermediate_degree < graph_degree) {
     RAFT_LOG_WARN(
       "Graph degree (%lu) cannot be larger than intermediate graph degree (%lu), reducing "
       "graph_degree.",
       graph_degree,
-      degree);
-    graph_degree = degree;
+      intermediate_degree);
+    graph_degree = intermediate_degree;
   }
 
-  auto knn_graph = raft::make_host_matrix<IdxT, IdxT>(dataset.extent(0), degree);
+  auto knn_graph = raft::make_host_matrix<IdxT, IdxT>(dataset.extent(0), intermediate_degree);
 
   build_knn_graph(res, dataset, knn_graph.view());
 
@@ -297,6 +297,8 @@ void search(raft::resources const& res,
 
   RAFT_EXPECTS(neighbors.extent(1) == distances.extent(1),
                "Number of columns in output neighbors and distances matrices must equal k");
+  RAFT_EXPECTS(queries.extent(1) == idx.dim(),
+               "Number of query dimensions should equal number of dimensions in the index.");
 
   using internal_IdxT   = typename std::make_unsigned<IdxT>::type;
   auto queries_internal = raft::make_device_matrix_view<const T, internal_IdxT, row_major>(
