@@ -1,10 +1,10 @@
 {
   "dataset": {
-    "name": "wiki_all_1M",
-    "subset_size": 1000000,
-    "base_file": "wiki_all_1M/base.1M.fbin",
-    "query_file": "wiki_all_1M/queries.fbin",
-    "groundtruth_neighbors_file": "wiki_all_1M/groundtruth.1M.neighbors.ibin",
+    "name": "wiki_all-10M",
+    "subset_size": 10000000,
+    "base_file": "wiki_all_10M/base.10M.fbin",
+    "query_file": "wiki_all_10M/queries.fbin",
+    "groundtruth_neighbors_file": "wiki_all_10M/groundtruth.10M.neighbors.ibin",
     "distance": "euclidean"
   },
   "search_basic_param": {
@@ -13,10 +13,28 @@
   },
   "index": [
     {
+      "name": "hnswlib.M16.ef20",
+      "algo": "hnswlib",
+      "build_param": { "M": 16, "efConstruction": 20, "numThreads": 56 },
+      "file": "wiki_all_10M/hnswlib/M16.ef20",
+      "search_params": [
+        { "ef": 10, "numThreads": 56 },
+        { "ef": 20, "numThreads": 56 },
+        { "ef": 40, "numThreads": 56 },
+        { "ef": 60, "numThreads": 56 },
+        { "ef": 80, "numThreads": 56 },
+        { "ef": 120, "numThreads": 56 },
+        { "ef": 200, "numThreads": 56 },
+        { "ef": 400, "numThreads": 56 },
+        { "ef": 600, "numThreads": 56 },
+        { "ef": 800, "numThreads": 56 }
+      ]
+    },
+    {
       "name": "hnswlib.M16.ef30",
       "algo": "hnswlib",
       "build_param": { "M": 16, "efConstruction": 30, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef30",
+      "file": "wiki_all_10M/hnswlib/M16.ef30",
       "search_params": [
         { "ef": 10, "numThreads": 56 },
         { "ef": 20, "numThreads": 56 },
@@ -34,7 +52,7 @@
       "name": "hnswlib.M16.ef40",
       "algo": "hnswlib",
       "build_param": { "M": 16, "efConstruction": 40, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef40",
+      "file": "wiki_all_10M/hnswlib/M16.ef40",
       "search_params": [
         { "ef": 10, "numThreads": 56 },
         { "ef": 20, "numThreads": 56 },
@@ -52,7 +70,7 @@
       "name": "hnswlib.M16.ef50",
       "algo": "hnswlib",
       "build_param": { "M": 16, "efConstruction": 50, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef50",
+      "file": "wiki_all_10M/hnswlib/M16.ef50",
       "search_params": [
         { "ef": 10, "numThreads": 56 },
         { "ef": 20, "numThreads": 56 },
@@ -70,106 +88,11 @@
       "name": "hnswlib.M16.ef60",
       "algo": "hnswlib",
       "build_param": { "M": 16, "efConstruction": 60, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef60",
+      "file": "wiki_all_10M/hnswlib/M16.ef60",
       "search_params": [
         { "ef": 10, "numThreads": 56 },
         { "ef": 20, "numThreads": 56 },
         { "ef": 40, "numThreads": 56 },
-        { "ef": 50, "numThreads": 56 },
-        { "ef": 60, "numThreads": 56 },
-        { "ef": 80, "numThreads": 56 },
-        { "ef": 120, "numThreads": 56 },
-        { "ef": 200, "numThreads": 56 },
-        { "ef": 400, "numThreads": 56 },
-        { "ef": 600, "numThreads": 56 },
-        { "ef": 800, "numThreads": 56 }
-      ]
-    },
-    {
-      "name": "hnswlib.M16.ef70",
-      "algo": "hnswlib",
-      "build_param": { "M": 16, "efConstruction": 70, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef70",
-      "search_params": [
-        { "ef": 10, "numThreads": 56 },
-        { "ef": 20, "numThreads": 56 },
-        { "ef": 40, "numThreads": 56 },
-        { "ef": 50, "numThreads": 56 },
-        { "ef": 60, "numThreads": 56 },
-        { "ef": 80, "numThreads": 56 },
-        { "ef": 120, "numThreads": 56 },
-        { "ef": 200, "numThreads": 56 },
-        { "ef": 400, "numThreads": 56 },
-        { "ef": 600, "numThreads": 56 },
-        { "ef": 800, "numThreads": 56 }
-      ]
-    },
-    {
-      "name": "hnswlib.M16.ef80",
-      "algo": "hnswlib",
-      "build_param": { "M": 16, "efConstruction": 80, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef80",
-      "search_params": [
-        { "ef": 10, "numThreads": 56 },
-        { "ef": 20, "numThreads": 56 },
-        { "ef": 40, "numThreads": 56 },
-        { "ef": 50, "numThreads": 56 },
-        { "ef": 60, "numThreads": 56 },
-        { "ef": 80, "numThreads": 56 },
-        { "ef": 120, "numThreads": 56 },
-        { "ef": 200, "numThreads": 56 },
-        { "ef": 400, "numThreads": 56 },
-        { "ef": 600, "numThreads": 56 },
-        { "ef": 800, "numThreads": 56 }
-      ]
-    },
-    {
-      "name": "hnswlib.M16.ef90",
-      "algo": "hnswlib",
-      "build_param": { "M": 16, "efConstruction": 90, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef90",
-      "search_params": [
-        { "ef": 10, "numThreads": 56 },
-        { "ef": 20, "numThreads": 56 },
-        { "ef": 40, "numThreads": 56 },
-        { "ef": 50, "numThreads": 56 },
-        { "ef": 60, "numThreads": 56 },
-        { "ef": 80, "numThreads": 56 },
-        { "ef": 120, "numThreads": 56 },
-        { "ef": 200, "numThreads": 56 },
-        { "ef": 400, "numThreads": 56 },
-        { "ef": 600, "numThreads": 56 },
-        { "ef": 800, "numThreads": 56 }
-      ]
-    },
-    {
-      "name": "hnswlib.M16.ef100",
-      "algo": "hnswlib",
-      "build_param": { "M": 16, "efConstruction": 100, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M16.ef100",
-      "search_params": [
-        { "ef": 10, "numThreads": 56 },
-        { "ef": 20, "numThreads": 56 },
-        { "ef": 40, "numThreads": 56 },
-        { "ef": 60, "numThreads": 56 },
-        { "ef": 80, "numThreads": 56 },
-        { "ef": 120, "numThreads": 56 },
-        { "ef": 200, "numThreads": 56 },
-        { "ef": 400, "numThreads": 56 },
-        { "ef": 600, "numThreads": 56 },
-        { "ef": 800, "numThreads": 56 }
-      ]
-    },
-    {
-      "name": "hnswlib.M24.ef60",
-      "algo": "hnswlib",
-      "build_param": { "M": 24, "efConstruction": 60, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M24.ef60",
-      "search_params": [
-        { "ef": 10, "numThreads": 56 },
-        { "ef": 20, "numThreads": 56 },
-        { "ef": 40, "numThreads": 56 },
-        { "ef": 50, "numThreads": 56 },
         { "ef": 60, "numThreads": 56 },
         { "ef": 80, "numThreads": 56 },
         { "ef": 120, "numThreads": 56 },
@@ -183,13 +106,34 @@
       "name": "hnswlib.M24.ef80",
       "algo": "hnswlib",
       "build_param": { "M": 24, "efConstruction": 80, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M24.ef80",
+      "file": "wiki_all_10M/hnswlib/M24.ef80",
       "search_params": [
         { "ef": 10, "numThreads": 56 },
         { "ef": 20, "numThreads": 56 },
         { "ef": 40, "numThreads": 56 },
         { "ef": 50, "numThreads": 56 },
         { "ef": 60, "numThreads": 56 },
+        { "ef": 70, "numThreads": 56 },
+        { "ef": 80, "numThreads": 56 },
+        { "ef": 120, "numThreads": 56 },
+        { "ef": 200, "numThreads": 56 },
+        { "ef": 400, "numThreads": 56 },
+        { "ef": 600, "numThreads": 56 },
+        { "ef": 800, "numThreads": 56 }
+      ]
+    },
+    {
+      "name": "hnswlib.M24.ef90",
+      "algo": "hnswlib",
+      "build_param": { "M": 24, "efConstruction": 90, "numThreads": 56 },
+      "file": "wiki_all_10M/hnswlib/M24.ef90",
+      "search_params": [
+        { "ef": 10, "numThreads": 56 },
+        { "ef": 20, "numThreads": 56 },
+        { "ef": 40, "numThreads": 56 },
+        { "ef": 50, "numThreads": 56 },
+        { "ef": 60, "numThreads": 56 },
+        { "ef": 70, "numThreads": 56 },
         { "ef": 80, "numThreads": 56 },
         { "ef": 120, "numThreads": 56 },
         { "ef": 200, "numThreads": 56 },
@@ -202,12 +146,34 @@
       "name": "hnswlib.M24.ef100",
       "algo": "hnswlib",
       "build_param": { "M": 24, "efConstruction": 100, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M24.ef100",
+      "file": "wiki_all_10M/hnswlib/M24.ef100",
       "search_params": [
         { "ef": 10, "numThreads": 56 },
         { "ef": 20, "numThreads": 56 },
         { "ef": 40, "numThreads": 56 },
         { "ef": 50, "numThreads": 56 },
+        { "ef": 60, "numThreads": 56 },
+        { "ef": 70, "numThreads": 56 },
+        { "ef": 80, "numThreads": 56 },
+        { "ef": 90, "numThreads": 56 },
+        { "ef": 100, "numThreads": 56 },
+        { "ef": 110, "numThreads": 56 },
+        { "ef": 120, "numThreads": 56 },
+        { "ef": 200, "numThreads": 56 },
+        { "ef": 400, "numThreads": 56 },
+        { "ef": 600, "numThreads": 56 },
+        { "ef": 800, "numThreads": 56 }
+      ]
+    },
+    {
+      "name": "hnswlib.M32.ef80",
+      "algo": "hnswlib",
+      "build_param": { "M": 32, "efConstruction": 80, "numThreads": 56 },
+      "file": "wiki_all_10M/hnswlib/M32.ef80",
+      "search_params": [
+        { "ef": 10, "numThreads": 56 },
+        { "ef": 20, "numThreads": 56 },
+        { "ef": 40, "numThreads": 56 },
         { "ef": 60, "numThreads": 56 },
         { "ef": 80, "numThreads": 56 },
         { "ef": 120, "numThreads": 56 },
@@ -221,12 +187,32 @@
       "name": "hnswlib.M32.ef100",
       "algo": "hnswlib",
       "build_param": { "M": 32, "efConstruction": 100, "numThreads": 56 },
-      "file": "wiki_all_1M/hnswlib/M32.ef100",
+      "file": "wiki_all_10M/hnswlib/M32.ef100",
       "search_params": [
         { "ef": 10, "numThreads": 56 },
         { "ef": 20, "numThreads": 56 },
         { "ef": 40, "numThreads": 56 },
-        { "ef": 50, "numThreads": 56 },
+        { "ef": 60, "numThreads": 56 },
+        { "ef": 80, "numThreads": 56 },
+        { "ef": 90, "numThreads": 56 },
+        { "ef": 100, "numThreads": 56 },
+        { "ef": 110, "numThreads": 56 },
+        { "ef": 120, "numThreads": 56 },
+        { "ef": 200, "numThreads": 56 },
+        { "ef": 400, "numThreads": 56 },
+        { "ef": 600, "numThreads": 56 },
+        { "ef": 800, "numThreads": 56 }
+      ]
+    },
+    {
+      "name": "hnswlib.M64.ef100",
+      "algo": "hnswlib",
+      "build_param": { "M": 64, "efConstruction": 100, "numThreads": 56 },
+      "file": "wiki_all_10M/hnswlib/M64.ef100",
+      "search_params": [
+        { "ef": 10, "numThreads": 56 },
+        { "ef": 20, "numThreads": 56 },
+        { "ef": 40, "numThreads": 56 },
         { "ef": 60, "numThreads": 56 },
         { "ef": 80, "numThreads": 56 },
         { "ef": 120, "numThreads": 56 },
@@ -244,7 +230,7 @@
         "nlist": 16384,
         "ratio": 2
       },
-      "file": "wiki_all_1M/faiss_ivf_pq/M32-nlist16K_ratio2",
+      "file": "wiki_all/faiss_ivf_pq/M32-nlist16K_ratio2",
       "search_params": [
         { "nprobe": 10 },
         { "nprobe": 20 },
@@ -264,7 +250,7 @@
         "nlist": 16384,
         "ratio": 2
       },
-      "file": "wiki_all_1M/faiss_ivf_pq/M64-nlist16K_ratio2",
+      "file": "wiki_all/faiss_ivf_pq/M64-nlist16K_ratio2",
       "search_params": [
         { "nprobe": 10 },
         { "nprobe": 20 },
@@ -286,7 +272,7 @@
         "niter": 10,
         "ratio": 10
       },
-      "file": "wiki_all_1M/raft_ivf_pq/d128-nlist16K",
+      "file": "wiki_all/raft_ivf_pq/d128-nlist16K",
       "search_params": [
         { "nprobe": 20, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 1 },
         { "nprobe": 30, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 1 },
@@ -307,7 +293,7 @@
         "niter": 10,
         "ratio": 10
       },
-      "file": "wiki_all_1M/raft_ivf_pq/d64-nlist16K",
+      "file": "wiki_all/raft_ivf_pq/d64-nlist16K",
       "search_params": [
         { "nprobe": 20, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 4 },
         { "nprobe": 30, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 4 },
@@ -328,7 +314,7 @@
         "niter": 10,
         "ratio": 10
       },
-      "file": "wiki_all_1M/raft_ivf_pq/d32-nlist16K",
+      "file": "wiki_all/raft_ivf_pq/d32-nlist16K",
       "search_params": [
         { "nprobe": 20, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 32 },
         { "nprobe": 30, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 32 },
@@ -349,7 +335,7 @@
         "niter": 10,
         "ratio": 10
       },
-      "file": "wiki_all_1M/raft_ivf_pq/d32-nlist16K",
+      "file": "wiki_all/raft_ivf_pq/d32-nlist16K",
       "search_params": [
         { "nprobe": 20, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 16 },
         { "nprobe": 30, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 16 },
@@ -376,7 +362,7 @@
       "name": "raft_cagra.dim32.multi_cta.default",
       "algo": "raft_cagra",
       "build_param": { 
-        "graph_degree": 32, 
+        "graph_degree": 32,
         "intermediate_graph_degree": 48,
         "ivf_pq_build_params": {
           "pq_dim": 32,
@@ -385,20 +371,19 @@
           "niter": 10,
           "ratio": 10
         },
-        "ivf_pq_search_params": { "nprobe": 10, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 4 }
-      },
-      "file": "wiki_all_1M/raft_cagra/dim32.ibin",
+        "ivf_pq_search_params": { "nprobe": 50, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 4 }
+       },
+      "file": "wiki_all_10M/raft_cagra/dim32.ibin",
       "search_params": [
         { "itopk": 96, "search_width": 2, "max_iterations": 48, "algo": "multi_cta", "graph_mem": "device",  "dataset_mem": "device"  },
         { "itopk": 96, "search_width": 2, "max_iterations": 48, "algo": "multi_cta", "graph_mem": "host_pinned",  "dataset_mem": "host_pinned"  }
-
       ]
     },
     {
       "name": "raft_cagra.dim32.multi_cta.huge_page",
       "algo": "raft_cagra",
       "build_param": { 
-        "graph_degree": 32, 
+        "graph_degree": 32,
         "intermediate_graph_degree": 48,
         "ivf_pq_build_params": {
           "pq_dim": 32,
@@ -407,16 +392,13 @@
           "niter": 10,
           "ratio": 10
         },
-        "ivf_pq_search_params": { "nprobe": 10, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 4 }
-      },
-      "file": "wiki_all_1M/raft_cagra/dim32.ibin",
+        "ivf_pq_search_params": { "nprobe": 50, "internalDistanceDtype": "half", "smemLutDtype": "half", "refine_ratio": 4 }
+       },
+      "file": "wiki_all_10M/raft_cagra/dim32.ibin",
       "search_params": [
         { "itopk": 96, "search_width": 2, "max_iterations": 48, "algo": "multi_cta", "graph_mem": "device",  "dataset_mem": "device"  },
         { "itopk": 96, "search_width": 2, "max_iterations": 48, "algo": "multi_cta", "graph_mem": "host_huge_page",  "dataset_mem": "host_huge_page"  }
-
       ]
     }
-
-
   ]
 }
