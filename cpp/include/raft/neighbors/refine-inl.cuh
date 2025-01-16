@@ -75,7 +75,9 @@ void refine(raft::resources const& handle,
             raft::device_matrix_view<distance_t, matrix_idx, row_major> distances,
             distance::DistanceType metric = distance::DistanceType::L2Unexpanded)
 {
-  detail::refine_device(handle, dataset, queries, neighbor_candidates, indices, distances, metric);
+  RAFT_FAIL("Refinement for device array disabled to save compile time");
+  // detail::refine_device(handle, dataset, queries, neighbor_candidates, indices, distances,
+  // metric);
 }
 
 /** Same as above, but all input and out data is in host memory.
