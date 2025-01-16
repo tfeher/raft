@@ -97,11 +97,14 @@ std::vector<RefineInputs<T>> getInputs()
 {
   std::vector<RefineInputs<T>> out;
   raft::distance::DistanceType metric = raft::distance::DistanceType::L2Expanded;
-  for (bool host_data : {true, false}) {
-    for (T n_queries : {1000, 10000}) {
-      for (T dim : {128, 512}) {
-        out.push_back(RefineInputs<T>{n_queries, 2000000, dim, 32, 128, metric, host_data});
-        out.push_back(RefineInputs<T>{n_queries, 2000000, dim, 10, 40, metric, host_data});
+  bool no_groundtruth                 = true;
+  for (bool host_data : {true}) {
+    for (T n_queries : {10, 10000}) {
+      for (T dim : {768}) {
+        out.push_back(
+          RefineInputs<T>{n_queries, 2000000, dim, 32, 128, metric, host_data, no_groundtruth});
+        out.push_back(
+          RefineInputs<T>{n_queries, 2000000, dim, 32, 512, metric, host_data, no_groundtruth});
       }
     }
   }
