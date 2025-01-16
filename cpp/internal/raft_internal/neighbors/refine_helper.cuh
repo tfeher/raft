@@ -40,6 +40,7 @@ struct RefineInputs {
   IdxT k0;  // initial k before refinement (k0 >= k).
   raft::distance::DistanceType metric;
   bool host_data;
+  bool no_groundtruth;
 };
 
 /** Helper class to allocate arrays and generate input data for refinement test and benchmark. */
@@ -81,8 +82,11 @@ class RefineHelper {
     refined_indices   = raft::make_device_matrix<IdxT, IdxT>(handle_, p.n_queries, p.k);
 
     // Generate candidate vectors
-    {
-      candidates = raft::make_device_matrix<IdxT, IdxT>(handle_, p.n_queries, p.k0);
+    candidates = raft::make_device_matrix<IdxT, IdxT>(handle_, p.n_queries, p.k0);
+    if (p.no_groundtruth) {
+      raft::random::uniformInt(
+        handle, rng, candidates.data_handle(), candidates.size(), IdxT(0), IdxT(p.n_rows - 1));
+    } else {
       rmm::device_uvector<DistanceT> distances_tmp(p.n_queries * p.k0, stream_);
       naive_knn<DistanceT, DataT, IdxT>(handle_,
                                         distances_tmp.data(),
@@ -113,7 +117,7 @@ class RefineHelper {
     }
 
     // Generate ground thruth for testing.
-    {
+    if (not p.no_groundtruth) {
       rmm::device_uvector<DistanceT> distances_dev(p.n_queries * p.k, stream_);
       rmm::device_uvector<IdxT> indices_dev(p.n_queries * p.k, stream_);
       naive_knn<DistanceT, DataT, IdxT>(handle_,
